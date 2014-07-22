@@ -117,12 +117,12 @@ module Thrift
         # don't let this get caught by the StandardError handler
         raise e
       rescue StandardError => e
-        @handle.close unless @handle.closed?
-        @handle = nil
         if @handle.eof?
           self.close
           raise TransportException.new(TransportException::NOT_OPEN, "Socket is invalid.")
         end
+        @handle.close unless @handle.closed?
+        @handle = nil
         raise TransportException.new(TransportException::NOT_OPEN, e.message)
       end
       if (data.nil? or data.length == 0)
@@ -137,7 +137,7 @@ module Thrift
     end
 
     def abortive_disconnect
-      @handle.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_LINGER, [0, 0].pack("ii"))
+      @handle.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_LINGER, [0, 0].pack("ii")) unless @handle.nil? or @handle.closed?
       close
     end
 
