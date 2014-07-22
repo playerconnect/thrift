@@ -38,6 +38,15 @@ module Thrift
         @handle = ::Socket.new(addrinfo[4], ::Socket::SOCK_STREAM, 0)
         @handle.setsockopt(::Socket::IPPROTO_TCP, ::Socket::TCP_NODELAY, 1)
         sockaddr = ::Socket.sockaddr_in(addrinfo[1], addrinfo[3])
+
+        if @timeout && @timeout > 0
+          secs = Integer(@timeout)
+          usecs = Integer((@timeout - secs) * 1_000_000)
+          optval = [secs, usecs].pack("l_2")
+          @handle.setsockopt ::Socket::SOL_SOCKET, ::Socket::SO_RCVTIMEO, optval
+          @handle.setsockopt ::Socket::SOL_SOCKET, ::Socket::SO_SNDTIMEO, optval
+        end
+
         begin
           @handle.connect_nonblock(sockaddr)
         rescue Errno::EINPROGRESS
@@ -93,7 +102,10 @@ module Thrift
 
     def read(sz)
       raise IOError, "closed stream" unless open?
-
+      if @handle.eof?
+        self.close
+        raise TransportException.new(TransportException::NOT_OPEN, "Socket is invalid.")
+      end
       begin
         if @timeout.nil? or @timeout == 0
           data = @handle.readpartial(sz)
@@ -130,6 +142,11 @@ module Thrift
     def close
       @handle.close unless @handle.nil? or @handle.closed?
       @handle = nil
+    end
+
+    def abortive_disconnect
+      @handle.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_LINGER, [0, 0].pack("ii"))
+      close
     end
 
     def to_io

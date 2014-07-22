@@ -42,6 +42,10 @@ module Thrift
       @transport.close
     end
 
+    def abortive_disconnect
+      @transport.abortive_disconnect
+    end
+
     def read(sz)
       @index += sz
       ret = @rbuf.slice(@index - sz, sz) || Bytes.empty_byte_buffer

@@ -22,8 +22,12 @@ require 'socket'
 
 module Thrift
   class ServerSocket < BaseServerTransport
+
+    attr_reader :port, :sockets
+
     # call-seq: initialize(host = nil, port)
     def initialize(host_or_port, port = nil)
+      @sockets = []
       if port
         @host = host_or_port
         @port = port
@@ -41,12 +45,32 @@ module Thrift
     end
 
     def accept
+      cleanup_stale_connections
       unless @handle.nil?
         sock = @handle.accept
-        trans = Socket.new
+        trans = ::Thrift::Socket.new
+        sock.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_LINGER, [5, 5].pack("ii"))
+        sock.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_KEEPALIVE, true)
         trans.handle = sock
+        if !@sockets.include?(trans)
+          @sockets << trans
+        end
         trans
       end
+    end
+
+    def close_for_reads
+      # don't accept any more reads on each open socket
+      @sockets.each { |sock| sock.handle.close_read if !sock.handle.nil? && !sock.handle.closed? }
+    end
+
+    def close_listen_port
+      # close the listen port
+      @handle.close unless @handle.nil? or @handle.closed?
+    end
+
+    def cleanup_stale_connections
+      @sockets = @sockets.reduce([]){ |socks, sock| socks << sock if !sock.handle.nil? && !sock.handle.closed? ; socks }
     end
 
     def close
@@ -56,6 +80,10 @@ module Thrift
 
     def closed?
       @handle.nil? or @handle.closed?
+    end
+
+    def total_connected
+      @sockets.length
     end
 
     alias to_io handle
