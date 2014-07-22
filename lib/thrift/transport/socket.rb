@@ -93,7 +93,7 @@ module Thrift
 
     def read(sz)
       raise IOError, "closed stream" unless open?
-
+      # self.close && raise TransportException.new(TransportException::NOT_OPEN, "Socket is invalid.") if @handle.eof?
       begin
         if @timeout.nil? or @timeout == 0
           data = @handle.readpartial(sz)
