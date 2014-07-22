@@ -57,6 +57,13 @@ module Thrift
                   end
                 rescue Thrift::TransportException, Thrift::ProtocolException => e
                 ensure
+                  # Perhaps it would be better here to set the socket SO_LINGER option to 0 and
+                  # perform an abortive shutdown on the socket. This will send an RST to the client
+                  # instead of a graceful shutdown on the socket. This allows the client to handle
+                  # unexpected disconnects more appropriately (do not retry sending request).
+                  #
+                  # This solution should allow the client to handle any other EOF on the socket as 
+                  # evidence of server-terminated session and retry.
                   trans.close
                 end
               end
