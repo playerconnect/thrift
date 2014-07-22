@@ -23,7 +23,7 @@ require 'socket'
 module Thrift
   class ServerSocket < BaseServerTransport
 
-    attr_reader :port, :sockets
+    attr_reader :handle, :port, :sockets
 
     # call-seq: initialize(host = nil, port)
     def initialize(host_or_port, port = nil)
@@ -37,8 +37,6 @@ module Thrift
       end
       @handle = nil
     end
-
-    attr_reader :handle
 
     def listen
       @handle = TCPServer.new(@host, @port)
