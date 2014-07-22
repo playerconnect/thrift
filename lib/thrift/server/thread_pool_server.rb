@@ -57,7 +57,7 @@ module Thrift
                   end
                 rescue Thrift::TransportException, Thrift::ProtocolException => e
                 ensure
-                  trans.close
+                  trans.abortive_disconnect
                 end
               end
             rescue => e
