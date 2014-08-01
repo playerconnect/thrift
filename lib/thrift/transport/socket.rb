@@ -117,9 +117,14 @@ module Thrift
         # don't let this get caught by the StandardError handler
         raise e
       rescue StandardError => e
+        if @handle.eof?
+          ex = TransportException.new(TransportException::NOT_OPEN, "No data to read from socket.")
+        else
+          ex = TransportException.new(TransportException::NOT_OPEN, e.message)
+        end
         @handle.close unless @handle.closed?
         @handle = nil
-        raise TransportException.new(TransportException::NOT_OPEN, e.message)
+        raise ex
       end
       if (data.nil? or data.length == 0)
         raise TransportException.new(TransportException::UNKNOWN, "Socket: Could not read #{sz} bytes from #{@desc}")
