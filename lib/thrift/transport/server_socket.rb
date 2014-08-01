@@ -81,6 +81,7 @@ module Thrift
     end
 
     def total_connected
+      cleanup_stale_connections
       @sockets.length
     end
 

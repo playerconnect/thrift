@@ -117,10 +117,6 @@ module Thrift
         # don't let this get caught by the StandardError handler
         raise e
       rescue StandardError => e
-        if @handle.eof?
-          self.close
-          raise TransportException.new(TransportException::NOT_OPEN, "Socket is invalid.")
-        end
         @handle.close unless @handle.closed?
         @handle = nil
         raise TransportException.new(TransportException::NOT_OPEN, e.message)
