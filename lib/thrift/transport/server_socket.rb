@@ -25,6 +25,8 @@ module Thrift
 
     attr_reader :handle, :port, :sockets
 
+    TIMEOUT = 60 * 5 # 5 minutes
+
     # call-seq: initialize(host = nil, port)
     def initialize(host_or_port, port = nil)
       @sockets = []
@@ -46,9 +48,9 @@ module Thrift
       cleanup_stale_connections
       unless @handle.nil?
         sock = @handle.accept
-        trans = ::Thrift::Socket.new
+        trans = ::Thrift::Socket.new(@host, @port, TIMEOUT)
         sock.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_LINGER, [5, 5].pack("ii"))
-        sock.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_KEEPALIVE, true)
+        sock.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_KEEPALIVE, false)
         trans.handle = sock
         if !@sockets.include?(trans)
           @sockets << trans
