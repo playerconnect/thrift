@@ -57,7 +57,8 @@ module Thrift
     end
 
     def open?
-      !@handle.nil? and !@handle.closed?
+      return false if @handle.nil? || @handle.closed?
+      true
     end
 
     def write(str)

@@ -70,7 +70,7 @@ module Thrift
     end
 
     def cleanup_stale_connections
-      @sockets = @sockets.reduce([]){ |socks, sock| socks << sock if !sock.handle.nil? && !sock.handle.closed? ; socks }
+      @sockets = @sockets.compact.reduce([]){ |socks, sock| socks << sock if !sock.handle.nil? && !sock.handle.closed? ; socks }
     end
 
     def close
