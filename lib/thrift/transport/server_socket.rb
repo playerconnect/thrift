@@ -61,7 +61,9 @@ module Thrift
 
     def close_for_reads
       # don't accept any more reads on each open socket
-      @sockets.each { |sock| sock.handle.close_read if !sock.handle.nil? && !sock.handle.closed? }
+      @sockets.compact.each do |sock|
+        sock.handle.close_read if sock.handle.respond_to?(:close_read)
+      end
     end
 
     def close_listen_port
@@ -70,16 +72,21 @@ module Thrift
     end
 
     def cleanup_stale_connections
-      @sockets = @sockets.compact.reduce([]){ |socks, sock| socks << sock if !sock.handle.nil? && !sock.handle.closed? ; socks }
+      @sockets = @sockets.compact.reduce([]) do |socks, sock|
+        if sock.handle.respond_to?(:closed?)
+          socks << sock unless sock.handle.closed?
+        end
+        socks
+      end
     end
 
     def close
-     @handle.close unless @handle.nil? or @handle.closed?
+     @handle.close unless @handle.nil? || @handle.closed?
      @handle = nil
     end
 
     def closed?
-      @handle.nil? or @handle.closed?
+      @handle.nil? || @handle.closed?
     end
 
     def total_connected
