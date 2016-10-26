@@ -18,6 +18,12 @@
  */
 
 #include <ruby.h>
+/** Compilation fix for rubies < 2.2 on OSX El Capitan 
+* as noted at: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=202660
+*/
+#undef INT2FIX
+#define INT2FIX(i) ((VALUE)(((VALUE)(i))<<1 | FIXNUM_FLAG))
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <constants.h>
