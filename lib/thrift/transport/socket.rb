@@ -37,6 +37,12 @@ module Thrift
         addrinfo = ::Socket::getaddrinfo(@host, @port, nil, ::Socket::SOCK_STREAM).first
         @handle = ::Socket.new(addrinfo[4], ::Socket::SOCK_STREAM, 0)
         @handle.setsockopt(::Socket::IPPROTO_TCP, ::Socket::TCP_NODELAY, 1)
+
+        @handle.setsockopt(::Socket::SOL_SOCKET, ::Socket::SO_KEEPALIVE, true)
+        @handle.setsockopt(::Socket::SOL_TCP, ::Socket::TCP_KEEPIDLE, 30)
+        @handle.setsockopt(::Socket::SOL_TCP, ::Socket::TCP_KEEPINTVL, 10)
+        @handle.setsockopt(::Socket::SOL_TCP, ::Socket::TCP_KEEPCNT, 5)
+
         sockaddr = ::Socket.sockaddr_in(addrinfo[1], addrinfo[3])
 
         begin
